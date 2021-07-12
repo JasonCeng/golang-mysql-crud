@@ -1,0 +1,48 @@
+blockchain:
+  app:
+    name: MPC-ONLINE-DATA
+    version: 1.0.0
+  orginfo:
+    orgname:
+  log:
+    filename: /data/var/bctp/log/mpc-online-data.log
+    max-size: 50000000
+    max-files: 20
+    rotate: true
+    level: info
+  orgsdatabase:
+    driverName:
+    address:
+    user:
+    password:
+    schema:
+    currency:
+    unit:
+    table1:
+    table2:
+    field1:
+    field2:
+    timename1:
+    kebianname1:
+    countname1:
+    maxOpenConns: 10
+    maxIdleConns: 10
+    interval: 60s
+
+  mpcdatabase:
+    driverName:
+    address:
+    user:
+    password:
+    schema:
+    table:
+    maxOpenConns: 10
+    maxIdleConns: 10
+    interval: 1800s
+    syncHistoryTable:
+
+  mpcserve:
+    host:
+    port:
+  rest:
+    listenaddress:
