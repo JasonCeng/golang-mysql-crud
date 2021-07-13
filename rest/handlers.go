@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"golang-mysql-crud/tools"
 	"net/http"
 )
 
 const (
 	REST_VERSION = "1.0"
 	ERR_DEFAULT = "SYSTEM ERROR"
+)
+
+const (
+	JSON_TYPE = "application/json; charset=utf-8"
 )
 
 const (
@@ -53,9 +56,9 @@ func errHandler(context *gin.Context, httpCode, errorCode int, errMsg string)  {
 	}
 
 	if data != nil {
-		context.Data(httpCode, tools.JSON_TYPE, data)
+		context.Data(httpCode, JSON_TYPE, data)
 	}else {
-		context.Data(httpCode, tools.JSON_TYPE, []byte(ERR_DEFAULT))
+		context.Data(httpCode, JSON_TYPE, []byte(ERR_DEFAULT))
 	}
 
 	context.Set("resp", errMsg)
@@ -76,7 +79,7 @@ func warnHandler(context *gin.Context, httpCode, errorCode int, warnMsg string) 
 		return
 	}
 
-	context.Data(httpCode, tools.JSON_TYPE, data)
+	context.Data(httpCode, JSON_TYPE, data)
 	context.Set("resp", warnMsg)
 	restLogger.Warning(warnMsg)
 }
@@ -95,6 +98,6 @@ func okHandler(context *gin.Context, okMsg string)  {
 		return
 	}
 
-	context.Data(http.StatusOK, tools.JSON_TYPE, data)
+	context.Data(http.StatusOK, JSON_TYPE, data)
 	context.Set("resp", okMsg)
 }

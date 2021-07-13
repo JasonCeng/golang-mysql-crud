@@ -12,22 +12,29 @@ import (
 var restLogger = logging.MustGetLogger("rest")
 
 func Start() error {
-
+	//发版模式创建路由对象
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 
+	//设置rest日志中间件
 	router.Use(restLog())
+	//设置跨域访问
 	router.Use(setRespType())
 
-	parent := router.Group("/rest")
+	//创建Group
+	parent := router.Group("/rest/db")
 
-	parent.GET("/db", QueryData())
+	//前置服务通用数据查询 POST请求接口
+	parent.POST("/queryData", QueryData())
 
+	//URL_NOT_FOUND处理
 	router.NoRoute(noRouterHandler())
 
+	//读取配置
 	host := viper.GetString("blockchain.rest.listenaddress")
 	restLogger.Infof("blockchain-rest-db starting, listen on %s", host)
 
+	//无限期启动HTTP服务和监听，除非有报错发生
 	return router.Run(host)
 }
 

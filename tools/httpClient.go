@@ -1,10 +1,8 @@
 package tools
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/op/go-logging"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -52,59 +50,4 @@ func (hc*HttpClient)HttpRequest(method,contentType,url string,msg[]byte) ([]byte
   }
 
   return  data,nil
-}
-
-func Dorequest(chaincodeReq *ChaincodeReq,ret *Ret)  {
-
-	host :=viper.GetString("blockchain.mpcserve.host")
-	port :=viper.GetString("blockchain.mpcserve.port")
-	url :=fmt.Sprintf("http://%s:%s/pub?topic=audit",host,port)
-	onlineLogger.Info(url)
-	sendData,err :=json.Marshal(chaincodeReq)
-	if err!=nil {
-		onlineLogger.Errorf("json解析失败: %v",err)
-		return
-	}
-	onlineLogger.Infof("存证:%s",string(sendData))
-	httpClient, _ := GetHttpClient()
-	resp,err := httpClient.HttpRequest(METHOD_POST,JSON_TYPE,url,sendData)
-	httpLogger.Infof("httpClient.HttpRequest resp: %s",resp)
-	if err!= nil{
-		onlineLogger.Errorf("上链失败: %v",err)
-	}
-	rep :=string(resp)
-	if rep !="OK"{
-		httpLogger.Errorf("request(%s) err:%s",url,rep)
-	}else{
-		httpLogger.Infof("send StartTask Msg successful,req:%s",sendData)
-	}
-	return
-}
-
-func chainCode(result *Result,mpcData *MpcDataSyncStatus,ret *Ret)  {
-
-	if result.Code == http.StatusOK{
-		chaincodeReq :=&ChaincodeReq{
-			Channel :"mpcchannel",
-			ChaincodeName :"audit_cc",
-			FunctionName :"saveStatusOfDataSync",
-			Args:&reqArgs{
-				Counts:mpcData.Counts,
-				TagId: mpcData.TagId,
-				Status: mpcData.Status,
-				DataHash : mpcData.Hash,
-				OrgName: mpcData.OrgName,
-				TaskInstanceId:mpcData.TaskInstanceId,
-				SyncType:"2",
-			},
-		}
-
-		onlineLogger.Info("==========invoke saveStatusOfDataSync start=============")
-		Dorequest(chaincodeReq,ret)
-		onlineLogger.Info("==========invoke saveStatusOfDataSync start=============")
-	}else {
-		ret.Code = http.StatusBadRequest
-		ret.Msg = result.Msg
-	}
-
 }

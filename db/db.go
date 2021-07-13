@@ -20,19 +20,16 @@ type database struct{
 	interval time.Duration
 }
 
-func initORGSDB() *database {
-	driverName :=viper.GetString("blockchain.orgsdatabase.driverName")
-	user :=viper.GetString("blockchain.orgsdatabase.user")
-	password :=viper.GetString("blockchain.orgsdatabase.password")
-	bytes,_ := base64.StdEncoding.DecodeString(password)
-	password =string(bytes)
-	address :=viper.GetString("blockchain.orgsdatabase.address")
-	schema :=viper.GetString("blockchain.orgsdatabase.schema")
-	maxOpenConns :=viper.GetInt("blockchain.orgsdatabase.maxOpenConns")
-	maxIdleConns :=viper.GetInt("blockchain.orgsdatabase.maxIdleConns")
-	interval :=viper.GetDuration("blockchain.orgsdatabase.interval")
-	dataSourceName :=user+":"+password+"@tcp("+address+")/"+schema
-
+func initMPCDB(userName string, passwdBase64 string) *database {
+	driverName :=viper.GetString("blockchain.database.driverName")
+	decodePasswdBytes,_ := base64.StdEncoding.DecodeString(passwdBase64)
+	password := string(decodePasswdBytes)
+	address :=viper.GetString("blockchain.database.address")
+	schema :=viper.GetString("blockchain.database.schema")
+	maxOpenConns :=viper.GetInt("blockchain.database.maxOpenConns")
+	maxIdleConns :=viper.GetInt("blockchain.database.maxIdleConns")
+	interval :=viper.GetDuration("blockchain.database.interval")
+	dataSourceName := userName + ":" + password + "@tcp(" + address + ")/" + schema
 
 	db :=&database{
 		driverName: driverName,
@@ -41,36 +38,11 @@ func initORGSDB() *database {
 		maxIdleConns: maxIdleConns,
 		interval: interval,
 	}
-	go db.checkORGDBConn()
+	go db.checkDBConn()
 	return db
 }
 
-func initMPCDB() *database {
-	driverName :=viper.GetString("blockchain.mpcdatabase.driverName")
-	user :=viper.GetString("blockchain.mpcdatabase.user")
-	password :=viper.GetString("blockchain.mpcdatabase.password")
-	bytes,_ := base64.StdEncoding.DecodeString(password)
-	password =string(bytes)
-	address :=viper.GetString("blockchain.mpcdatabase.address")
-	schema :=viper.GetString("blockchain.mpcdatabase.schema")
-	maxOpenConns :=viper.GetInt("blockchain.mpcdatabase.maxOpenConns")
-	maxIdleConns :=viper.GetInt("blockchain.mpcdatabase.maxIdleConns")
-	interval :=viper.GetDuration("blockchain.mpcdatabase.interval")
-	dataSourceName :=user+":"+password+"@tcp("+address+")/"+schema
-
-
-	db :=&database{
-		driverName: driverName,
-		dataSourceName: dataSourceName,
-		maxOpenConns: maxOpenConns,
-		maxIdleConns: maxIdleConns,
-		interval: interval,
-	}
-	go db.checkMPCDBConn()
-	return db
-}
-
-func (db *database)connectDB () (*sql.DB,error) {
+func (db *database) connectDB() (*sql.DB, error) {
 	conn,err :=sql.Open(db.driverName,db.dataSourceName);
 	if err!=nil{
 		return nil,err
@@ -81,91 +53,45 @@ func (db *database)connectDB () (*sql.DB,error) {
 	return conn,nil
 }
 
-var mpcOnce sync.Once
-var orgOnce sync.Once
-var mpcConn *sql.DB
-var orgConn *sql.DB
+var dbOnce sync.Once
+var dbConn *sql.DB
 
-func GetMPCDBConn()*sql.DB{
-	mpcOnce.Do(func() {
-		var err error
-		mpcConn,err = initMPCDB().connectDB()
+func GetDBConn(userName string, passwdBase64 string) (*sql.DB, error) {
+	var err error
+	dbOnce.Do(func() {
+		dbConn,err = initMPCDB(userName, passwdBase64).connectDB()
 		if err != nil{
 			dbLogger.Errorf("getDBConn err: %s",err)
 		}
 	})
 
-	return mpcConn
+	return dbConn,err
 }
 
-func GetORGSDBConn()*sql.DB{
-	orgOnce.Do(func() {
-		var err error
-		orgConn,err = initORGSDB().connectDB()
-		if err != nil{
-			dbLogger.Errorf("getDBConn err: %s",err)
-		}
-	})
-
-	return orgConn
-}
-
-func (db *database)checkORGDBConn()  {
-	dbLogger.Infof("chechORGDBConn running,interval %s",db.interval)
+func (db *database) checkDBConn()  {
+	dbLogger.Infof("checkDBConn running,interval %s", db.interval)
 
 	for{
-
-		if orgConn ==nil{
+		if dbConn ==nil{
 			dbLogger.Errorf("db connection is nil")
 			var err error
-			orgConn,err =db.connectDB()
+			dbConn,err = db.connectDB()
 			if err != nil {
 				dbLogger.Errorf("connect db err: %s",err)
 				continue
 			}
 		}
 
-		if err :=orgConn.Ping();err!=nil{
+		if err := dbConn.Ping();err != nil{
 			dbLogger.Errorf("ping db err: %s",err)
-			orgConn.Close()
+			dbConn.Close()
 			var err1 error
-			orgConn,err1 =db.connectDB()
+			dbConn,err1 =db.connectDB()
 			if err1 !=nil{
-				dbLogger.Errorf("connect db err: %s",err)
+				dbLogger.Errorf("connect dbConn err: %s",err)
 				continue
 			}
-			dbLogger.Infof("reconnect db successful")
-		}
-		time.Sleep(db.interval)
-	}
-
-}
-
-func (db *database)checkMPCDBConn()  {
-	dbLogger.Infof("chechMPCDBConn running,interval %s",db.interval)
-
-	for{
-
-		if mpcConn ==nil{
-			dbLogger.Errorf("db connection is nil")
-			var err error
-			mpcConn,err = db.connectDB()
-			if err != nil {
-				dbLogger.Errorf("connect db err: %s",err)
-				continue
-			}
-		}
-
-		if err := mpcConn.Ping();err != nil{
-			dbLogger.Errorf("ping db err: %s",err)
-			mpcConn.Close()
-			var err1 error
-			mpcConn,err1 =db.connectDB()
-			if err1 !=nil{
-				dbLogger.Errorf("connect mpcCon err: %s",err)
-				continue
-			}
-			dbLogger.Infof("reconnect mpcCon successful")
+			dbLogger.Infof("reconnect dbConn successful")
 		}
 		time.Sleep(db.interval)
 	}
