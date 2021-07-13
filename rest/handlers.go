@@ -1,11 +1,11 @@
 package rest
 
 import (
-	"github.com/gin-gonic/gin"
-	"net/http"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"golang-mysql-crud/tools"
+	"net/http"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 	EXIST_STATUS    = -40000
 )
 
-type mpcResponse struct {
+type response struct {
 	TxId string       `json:"txId,omitempty"`
 	Version string    `json:"version,omitempty"`
 	Code int          `json:"code"`
@@ -39,7 +39,7 @@ func noRouterHandler() gin.HandlerFunc {
 }
 
 func errHandler(context *gin.Context, httpCode, errorCode int, errMsg string)  {
-	resp := mpcResponse{
+	resp := response{
 		TxId:    context.GetString("txId"),
 		Version: REST_VERSION,
 		Code:    errorCode,
@@ -63,7 +63,7 @@ func errHandler(context *gin.Context, httpCode, errorCode int, errMsg string)  {
 }
 
 func warnHandler(context *gin.Context, httpCode, errorCode int, warnMsg string)  {
-	resp := mpcResponse{
+	resp := response{
 		TxId:    context.GetString("txId"),
 		Version: REST_VERSION,
 		Code:    errorCode,
@@ -81,11 +81,11 @@ func warnHandler(context *gin.Context, httpCode, errorCode int, warnMsg string) 
 	restLogger.Warning(warnMsg)
 }
 
-func okHandler(context *gin.Context, code int, okMsg string)  {
-	resp := mpcResponse{
+func okHandler(context *gin.Context, okMsg string)  {
+	resp := response{
 		TxId:    context.GetString("txId"),
 		Version: REST_VERSION,
-		Code:    code,
+		Code:    SUCCESS_CPDE,
 		Msg:     okMsg,
 	}
 

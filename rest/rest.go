@@ -4,7 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
+	"golang-mysql-crud/service/taskmgt"
 	"golang-mysql-crud/tools"
+	"net/http"
 )
 
 var restLogger = logging.MustGetLogger("rest")
@@ -17,27 +19,35 @@ func Start() error {
 	router.Use(restLog())
 	router.Use(setRespType())
 
-	parent := router.Group("/mpc/api")
+	parent := router.Group("/rest")
 
-	parent.GET("/getMpcData", MpcData())
+	parent.GET("/db", QueryData())
 
 	router.NoRoute(noRouterHandler())
 
 	host := viper.GetString("blockchain.rest.listenaddress")
-	restLogger.Infof("blockchain-mpc starting, listen on %s", host)
+	restLogger.Infof("blockchain-rest-db starting, listen on %s", host)
 
 	return router.Run(host)
 }
 
-func MpcData() gin.HandlerFunc {
+func QueryData() gin.HandlerFunc {
 	return func(ct *gin.Context) {
-		var synReq tools.SynReq
+		var queryReq tools.QueryReq
 
-		synReq.SqlStr = ct.Query("sqlstr")
-		synReq.TaskInstanceId = ct.Query("taskInstanceId")
-		synReq.OrgName = ct.Query("orgName")
+		err := ct.BindJSON(&queryReq)
+		if err != nil {
+			errMsg := "queryReq BindJSON err: " + err.Error()
+			errHandler(ct, http.StatusBadRequest, SYSTEM_ERR_CODE, errMsg)
+			return
+		}
 
-		result := tools.MpcData(&synReq)
-		okHandler(ct, result.Code, result.Msg)
+		QueryResult := taskmgt.GetTaskMgt(ct.GetString("txId")).TaskService(&queryReq)
+		if QueryResult.Status != "OK" {
+			errHandler(ct, http.StatusBadRequest, QueryResult.Error.Code, QueryResult.Error.Message)
+			return
+		}
+
+		okHandler(ct, QueryResult.Message)
 	}
 }
