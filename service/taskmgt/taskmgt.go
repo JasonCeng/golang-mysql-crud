@@ -38,7 +38,18 @@ func (task *taskMgt) QueryData(queryReq *tools.QueryReq) *tools.QueryResult {
 
 	//2、获取数据库连接
 	dbConn,err := db.GetDBConn(userName, passwdBase64)
-	tools.CheckErr(err)
+	if err != nil {
+		return &tools.QueryResult{
+			Status: STATUS_ERROR,
+			Message: "连接数据库失败",
+			Error: &tools.Error{
+				Code: tools.CONNECT_DB_FAIL,
+				Message: "",
+			},
+			Uuid: tools.GenerateUUID(),
+			QueryJsonData: "",
+		}
+	}
 
 	//3、拼接sql
 	queryFieldsStr := strings.Join(queryFields, ",")

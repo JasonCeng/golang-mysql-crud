@@ -1,0 +1,28 @@
+blockchain:
+  app:
+    name: REST-DATABASE
+    version: 1.0.0
+  orginfo:
+    orgname:
+  log:
+    filename: /data/var/bctp/log/fabric-rest-database.log
+    max-size: 50000000
+    max-files: 20
+    rotate: true
+    level: info
+
+  mpcserve:
+    host:
+    port:
+  rest:
+    database:
+      listenaddress: 127.0.0.1:38080
+      driverName: mysql
+      address: 192.168.104.110:33306
+      user:
+      password:
+      schema: mpc
+      table: user
+      maxOpenConns: 100
+      maxIdleConns: 100
+      interval: 1800s

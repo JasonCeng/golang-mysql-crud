@@ -9,6 +9,11 @@ const (
 	FAILED_STATUS = "FAILED"
 )
 
+const (
+	SUCCESS_CODE    = 0
+	CONNECT_DB_FAIL = -11130
+)
+
 type Db struct {
 	db *sql.DB
 }
@@ -25,12 +30,11 @@ type QueryResult struct {
 	Status string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
 	Error *Error `json:"error,omitempty"`
-	Uuid string `json:"error,omitempty"`
+	Uuid string `json:"uuid,omitempty"`
 	QueryJsonData string `json:"queryJsonData,omitempty"`
 }
 
 type Error struct {
 	Code int `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
-	Data string `json:"data,omitempty"`
 }

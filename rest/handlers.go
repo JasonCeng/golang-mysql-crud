@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"golang-mysql-crud/tools"
 	"net/http"
 )
 
@@ -28,10 +29,11 @@ const (
 )
 
 type response struct {
-	TxId string       `json:"txId,omitempty"`
-	Version string    `json:"version,omitempty"`
-	Code int          `json:"code"`
-	Msg string        `json:"msg,omitempty"`
+	TxId string              `json:"txId,omitempty"`
+	Version string           `json:"version,omitempty"`
+	Code int                 `json:"code"`
+	Msg string               `json:"msg,omitempty"`
+	QueryJsonData string     `json:"queryJsonData,omitempty"`
 }
 
 func noRouterHandler() gin.HandlerFunc {
@@ -84,12 +86,13 @@ func warnHandler(context *gin.Context, httpCode, errorCode int, warnMsg string) 
 	restLogger.Warning(warnMsg)
 }
 
-func okHandler(context *gin.Context, okMsg string)  {
-	resp := response{
+func okHandler(context *gin.Context, result *tools.QueryResult)  {
+	resp := response {
 		TxId:    context.GetString("txId"),
 		Version: REST_VERSION,
 		Code:    SUCCESS_CPDE,
-		Msg:     okMsg,
+		Msg:     result.Message,
+		QueryJsonData:    result.QueryJsonData,
 	}
 
 	data, err := json.Marshal(resp)
@@ -99,5 +102,5 @@ func okHandler(context *gin.Context, okMsg string)  {
 	}
 
 	context.Data(http.StatusOK, JSON_TYPE, data)
-	context.Set("resp", okMsg)
+	context.Set("resp", result.Message)
 }

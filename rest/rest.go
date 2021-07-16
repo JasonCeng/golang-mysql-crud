@@ -31,7 +31,7 @@ func Start() error {
 	router.NoRoute(noRouterHandler())
 
 	//读取配置
-	host := viper.GetString("blockchain.rest.listenaddress")
+	host := viper.GetString("blockchain.rest.database.listenaddress")
 	restLogger.Infof("blockchain-rest-db starting, listen on %s", host)
 
 	//无限期启动HTTP服务和监听，除非有报错发生
@@ -55,6 +55,6 @@ func QueryData() gin.HandlerFunc {
 			return
 		}
 
-		okHandler(ct, QueryResult.Message)
+		okHandler(ct, QueryResult)
 	}
 }

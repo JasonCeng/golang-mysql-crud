@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	CONFIG_FILE_NAME = "mpc"
+	CONFIG_FILE_NAME = "rest-db"
 	CONFIG_TYPE = "yaml"
-	ENV_PREFIX = "MPC"
+	ENV_PREFIX = ""
 )
 
 func InitConfig() error {
@@ -25,7 +25,7 @@ func InitConfig() error {
 		viper.AddConfigPath("./")
 		gopath := os.Getenv("GOPATH")
 		for _, p := range filepath.SplitList(gopath) {
-			peerpath := filepath.Join(p, "src/mpc-data-tools/mpc-online-data/config")
+			peerpath := filepath.Join(p, "/src/config")
 			viper.AddConfigPath(peerpath)
 		}
 	}

@@ -21,17 +21,17 @@ type database struct{
 }
 
 func initMPCDB(userName string, passwdBase64 string) *database {
-	driverName :=viper.GetString("blockchain.database.driverName")
+	driverName := viper.GetString("blockchain.rest.database.driverName")
 	decodePasswdBytes,_ := base64.StdEncoding.DecodeString(passwdBase64)
 	password := string(decodePasswdBytes)
-	address :=viper.GetString("blockchain.database.address")
-	schema :=viper.GetString("blockchain.database.schema")
-	maxOpenConns :=viper.GetInt("blockchain.database.maxOpenConns")
-	maxIdleConns :=viper.GetInt("blockchain.database.maxIdleConns")
-	interval :=viper.GetDuration("blockchain.database.interval")
+	address := viper.GetString("blockchain.rest.database.address")
+	schema := viper.GetString("blockchain.rest.database.schema")
+	maxOpenConns := viper.GetInt("blockchain.rest.database.maxOpenConns")
+	maxIdleConns := viper.GetInt("blockchain.rest.database.maxIdleConns")
+	interval := viper.GetDuration("blockchain.rest.database.interval")
 	dataSourceName := userName + ":" + password + "@tcp(" + address + ")/" + schema
 
-	db :=&database{
+	db := &database {
 		driverName: driverName,
 		dataSourceName: dataSourceName,
 		maxOpenConns: maxOpenConns,
@@ -43,8 +43,8 @@ func initMPCDB(userName string, passwdBase64 string) *database {
 }
 
 func (db *database) connectDB() (*sql.DB, error) {
-	conn,err :=sql.Open(db.driverName,db.dataSourceName);
-	if err!=nil{
+	conn,err := sql.Open(db.driverName,db.dataSourceName)
+	if err != nil {
 		return nil,err
 	}
 
